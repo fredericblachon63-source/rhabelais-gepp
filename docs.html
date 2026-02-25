@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - Rhabelais GEPP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        
+        <!-- Header -->
+        <div class="mb-8">
+            <a href="/" class="text-teal-600 hover:underline mb-4 inline-block">← Retour à l'accueil</a>
+            <h1 class="text-4xl font-bold mb-2">📚 Documentation</h1>
+            <p class="text-gray-600">Guide d'utilisation de Rhabelais GEPP</p>
+        </div>
+
+        <!-- Table des matières -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4">Table des matières</h2>
+            <ul class="space-y-2">
+                <li><a href="#premiers-pas" class="text-teal-600 hover:underline">1. Premiers pas</a></li>
+                <li><a href="#admin" class="text-teal-600 hover:underline">2. Interface Admin RH</a></li>
+                <li><a href="#manager" class="text-teal-600 hover:underline">3. Interface Manager</a></li>
+                <li><a href="#workflow" class="text-teal-600 hover:underline">4. Workflow complet</a></li>
+                <li><a href="#faq" class="text-teal-600 hover:underline">5. FAQ</a></li>
+            </ul>
+        </div>
+
+        <!-- Premiers pas -->
+        <div id="premiers-pas" class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-4">1. Premiers pas</h2>
+            
+            <h3 class="text-xl font-semibold mb-3">Connexion</h3>
+            <p class="mb-4">Accédez à l'application via le bouton "Ouvrir l'application" sur la page d'accueil.</p>
+            
+            <div class="bg-gray-50 p-4 rounded mb-4">
+                <p class="font-semibold mb-2">Compte Admin par défaut :</p>
+                <code class="text-sm">Email : contact@rhabelais.fr</code><br>
+                <code class="text-sm">Mot de passe : Test1234!</code>
+            </div>
+
+            <h3 class="text-xl font-semibold mb-3 mt-6">Mot de passe oublié ?</h3>
+            <p class="mb-4">Cliquez sur "Mot de passe oublié ?" sur la page de connexion. Un email de réinitialisation sera envoyé.</p>
+        </div>
+
+        <!-- Interface Admin -->
+        <div id="admin" class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-4">2. Interface Admin RH</h2>
+            
+            <h3 class="text-xl font-semibold mb-3">Workflow de configuration</h3>
+            <ol class="list-decimal list-inside space-y-3 mb-6">
+                <li><strong>Créer les managers</strong> - Onglet "Gestion Utilisateurs"</li>
+                <li><strong>Définir les postes</strong> - Onglet "Postes"</li>
+                <li><strong>Créer les compétences</strong> - Onglet "Compétences"</li>
+                <li><strong>Affecter les compétences aux postes</strong> - Onglet "Compétences"</li>
+                <li><strong>Créer les salariés</strong> - Onglet "Salariés"</li>
+                <li><strong>Évaluer les compétences</strong> - Onglet "Évaluer"</li>
+                <li><strong>Analyser les résultats</strong> - Onglet "Résultats"</li>
+            </ol>
+
+            <h3 class="text-xl font-semibold mb-3">Création d'un manager</h3>
+            <p class="mb-2">Les managers sont créés via SQL pour des raisons de sécurité :</p>
+            <ol class="list-decimal list-inside space-y-2 ml-4 mb-4">
+                <li>Remplissez le formulaire (email, nom, mot de passe)</li>
+                <li>Cliquez sur "Créer Manager"</li>
+                <li>Copiez le code SQL généré</li>
+                <li>Ouvrez Supabase SQL Editor</li>
+                <li>Collez et exécutez le code</li>
+            </ol>
+
+            <h3 class="text-xl font-semibold mb-3 mt-6">Export des données</h3>
+            <p class="mb-4">Utilisez les boutons d'export pour générer des fichiers Excel :</p>
+            <ul class="list-disc list-inside space-y-2 ml-4">
+                <li>Export des écarts de compétences</li>
+                <li>Export de la liste des salariés</li>
+                <li>Export global (toutes les données)</li>
+            </ul>
+        </div>
+
+        <!-- Interface Manager -->
+        <div id="manager" class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-4">3. Interface Manager</h2>
+            
+            <h3 class="text-xl font-semibold mb-3">Vue d'ensemble</h3>
+            <p class="mb-4">Les managers voient uniquement :</p>
+            <ul class="list-disc list-inside space-y-2 ml-4 mb-6">
+                <li>Leurs collaborateurs directs (N+1)</li>
+                <li>Les équipes de leurs collaborateurs managers (N+2)</li>
+            </ul>
+
+            <h3 class="text-xl font-semibold mb-3">Évaluation</h3>
+            <p class="mb-4">Pour évaluer un collaborateur :</p>
+            <ol class="list-decimal list-inside space-y-2 ml-4">
+                <li>Cliquez sur "Évaluer"</li>
+                <li>Sélectionnez le salarié</li>
+                <li>Attribuez les niveaux pour chaque compétence (0-5)</li>
+                <li>Validez l'évaluation</li>
+            </ol>
+
+            <div class="bg-blue-50 p-4 rounded mt-4">
+                <p class="text-sm"><strong>💡 Note :</strong> Les managers peuvent uniquement modifier les niveaux de compétences. Ils ne peuvent pas créer de salariés ni modifier les postes.</p>
+            </div>
+        </div>
+
+        <!-- Workflow -->
+        <div id="workflow" class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-4">4. Workflow complet</h2>
+            
+            <div class="space-y-4">
+                <div class="border-l-4 border-teal-600 pl-4">
+                    <h3 class="font-semibold">Phase 1 : Configuration initiale (Admin RH)</h3>
+                    <p class="text-sm text-gray-600">Création des postes, compétences et structure hiérarchique</p>
+                </div>
+
+                <div class="border-l-4 border-blue-600 pl-4">
+                    <h3 class="font-semibold">Phase 2 : Intégration des salariés (Admin RH)</h3>
+                    <p class="text-sm text-gray-600">Ajout des collaborateurs avec leurs postes et managers</p>
+                </div>
+
+                <div class="border-l-4 border-purple-600 pl-4">
+                    <h3 class="font-semibold">Phase 3 : Évaluation (Managers)</h3>
+                    <p class="text-sm text-gray-600">Les managers évaluent leurs équipes</p>
+                </div>
+
+                <div class="border-l-4 border-orange-600 pl-4">
+                    <h3 class="font-semibold">Phase 4 : Analyse (Admin RH)</h3>
+                    <p class="text-sm text-gray-600">Identification des écarts et planification des formations</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <div id="faq" class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-4">5. FAQ</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <h3 class="font-semibold mb-2">Comment réinitialiser un mot de passe ?</h3>
+                    <p class="text-sm text-gray-600">Utilisez la fonction "Mot de passe oublié" sur la page de connexion ou contactez l'administrateur.</p>
+                </div>
+
+                <div>
+                    <h3 class="font-semibold mb-2">Puis-je modifier un poste après création ?</h3>
+                    <p class="text-sm text-gray-600">Oui, cliquez sur le bouton ✏️ à côté du poste dans l'onglet "Postes".</p>
+                </div>
+
+                <div>
+                    <h3 class="font-semibold mb-2">Comment supprimer un salarié ?</h3>
+                    <p class="text-sm text-gray-600">Dans l'onglet "Salariés", cliquez sur le bouton 🗑️. Attention : cela supprimera aussi ses évaluations.</p>
+                </div>
+
+                <div>
+                    <h3 class="font-semibold mb-2">Les données sont-elles sécurisées ?</h3>
+                    <p class="text-sm text-gray-600">Oui, toutes les données sont hébergées sur Supabase avec authentification sécurisée et chiffrement.</p>
+                </div>
+
+                <div>
+                    <h3 class="font-semibold mb-2">Puis-je exporter mes données ?</h3>
+                    <p class="text-sm text-gray-600">Oui, utilisez les fonctions d'export Excel disponibles dans l'interface admin.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Support -->
+        <div class="bg-teal-50 border border-teal-200 rounded-lg p-6">
+            <h2 class="text-xl font-bold mb-2">📞 Besoin d'aide ?</h2>
+            <p class="text-gray-700">Contactez le support Rhabelais pour toute question ou assistance technique.</p>
+        </div>
+
+    </div>
+
+</body>
+</html>
