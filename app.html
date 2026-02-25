@@ -812,7 +812,12 @@ END $$;`;
     }
 
     async function chargerCompetencesPostes() {
-        const { data } = await sb.from('niveaux_attendus').select('*, metier:metiers(nom), competence:competences(nom, categorie)');
+        const { data } = await sb.from('niveaux_attendus').select(`
+            *, 
+            metier:metiers!inner(nom, entreprise_id), 
+            competence:competences(nom, categorie)
+        `).eq('metier.entreprise_id', entrepriseId);
+        
         const el = document.getElementById('listeCompetencesPostes');
         if (!data || data.length === 0) {
             el.innerHTML = '<p class="text-gray-500">Aucune compétence</p>';
