@@ -1,0 +1,1916 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rhabelais GEPP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50">
+    
+    <!-- LOGIN -->
+    <div id="pageLogin" class="min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8 space-y-6">
+            <div class="text-center">
+                <div class="mx-auto h-16 w-16 bg-teal-600 rounded-lg flex items-center justify-center mb-4">
+                    <span class="text-white font-bold text-xl">RH</span>
+                </div>
+                <h1 class="text-2xl font-bold">Rhabelais GEPP</h1>
+                <p class="text-gray-600 text-sm mt-2">Gestion des Compétences</p>
+            </div>
+            
+            <!-- Formulaire de connexion -->
+            <div id="loginFormContainer">
+                <form id="loginForm" class="space-y-4">
+                    <input id="loginEmail" type="email" required value="contact@rhabelais.fr"
+                        placeholder="Email" class="w-full px-3 py-2 border rounded-lg">
+                    <input id="loginPassword" type="password" required
+                        placeholder="Mot de passe" class="w-full px-3 py-2 border rounded-lg">
+                    <div id="loginError" class="hidden p-3 bg-red-50 text-sm text-red-800 rounded"></div>
+                    <div id="loginSuccess" class="hidden p-3 bg-green-50 text-sm text-green-800 rounded"></div>
+                    <button type="submit" class="w-full bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700">
+                        Se connecter
+                    </button>
+                    <button type="button" onclick="showPasswordReset()" class="w-full text-sm text-teal-600 hover:underline">
+                        Mot de passe oublié ?
+                    </button>
+                </form>
+            </div>
+
+            <!-- Formulaire de réinitialisation -->
+            <div id="resetFormContainer" class="hidden">
+                <button onclick="showLoginForm()" class="text-sm text-gray-600 hover:underline mb-4">
+                    ← Retour à la connexion
+                </button>
+                <form id="resetForm" class="space-y-4">
+                    <p class="text-sm text-gray-600">Entrez votre email pour recevoir un lien de réinitialisation</p>
+                    <input id="resetEmail" type="email" required
+                        placeholder="Email" class="w-full px-3 py-2 border rounded-lg">
+                    <div id="resetError" class="hidden p-3 bg-red-50 text-sm text-red-800 rounded"></div>
+                    <div id="resetSuccess" class="hidden p-3 bg-green-50 text-sm text-green-800 rounded"></div>
+                    <button type="submit" class="w-full bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700">
+                        Envoyer le lien
+                    </button>
+                </form>
+            </div>
+
+            <!-- Formulaire nouveau mot de passe (après clic sur lien email) -->
+            <div id="newPasswordContainer" class="hidden">
+                <h2 class="text-xl font-bold mb-4">Nouveau mot de passe</h2>
+                <form id="newPasswordForm" class="space-y-4">
+                    <p class="text-sm text-gray-600">Entrez votre nouveau mot de passe</p>
+                    <input id="newPassword" type="password" required minlength="6"
+                        placeholder="Nouveau mot de passe (min 6 caractères)" class="w-full px-3 py-2 border rounded-lg">
+                    <input id="newPasswordConfirm" type="password" required minlength="6"
+                        placeholder="Confirmer le mot de passe" class="w-full px-3 py-2 border rounded-lg">
+                    <div id="newPasswordError" class="hidden p-3 bg-red-50 text-sm text-red-800 rounded"></div>
+                    <div id="newPasswordSuccess" class="hidden p-3 bg-green-50 text-sm text-green-800 rounded"></div>
+                    <button type="submit" class="w-full bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700">
+                        Changer le mot de passe
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="pageDashboard" class="hidden min-h-screen">
+        <header class="bg-gradient-to-r from-teal-700 to-teal-500 text-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 py-4">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <button onclick="showHome()" class="text-2xl hover:bg-white/20 px-3 py-1 rounded" title="Accueil">
+                            🏠
+                        </button>
+                        <div>
+                            <h1 class="text-xl font-bold">Rhabelais GEPP</h1>
+                            <p class="text-sm opacity-90" id="userInfo">Chargement...</p>
+                        </div>
+                    </div>
+                    <button onclick="logout()" class="px-4 py-2 bg-white/20 rounded hover:bg-white/30">
+                        Déconnexion
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- ACCUEIL -->
+        <div id="pageHome" class="hidden">
+            <div class="max-w-7xl mx-auto px-4 py-8">
+                <!-- KPIs Accueil -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="text-3xl font-bold" id="homeCollabs">0</div>
+                        <div class="text-sm text-gray-600">Collaborateurs</div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="text-3xl font-bold" id="homePostes">0</div>
+                        <div class="text-sm text-gray-600">Postes</div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="text-3xl font-bold" id="homeComps">0</div>
+                        <div class="text-sm text-gray-600">Compétences</div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="text-3xl font-bold text-red-600" id="homeEcarts">0</div>
+                        <div class="text-sm text-gray-600">Écarts</div>
+                    </div>
+                </div>
+
+                <!-- Actions rapides ADMIN -->
+                <div id="adminActions" class="hidden grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <button onclick="showStep(0)" class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+                        <div class="text-4xl mb-2">👥</div>
+                        <div class="font-bold text-sm">Gestion Utilisateurs</div>
+                    </button>
+                    <button onclick="showStep(1)" class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+                        <div class="text-4xl mb-2">📋</div>
+                        <div class="font-bold text-sm">Créer Postes</div>
+                    </button>
+                    <button onclick="showStep(2)" class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+                        <div class="text-4xl mb-2">🎯</div>
+                        <div class="font-bold text-sm">Compétences</div>
+                    </button>
+                    <button onclick="showStep(3)" class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+                        <div class="text-4xl mb-2">➕</div>
+                        <div class="font-bold text-sm">Ajouter Salarié</div>
+                    </button>
+                    <button onclick="showStep(4)" class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+                        <div class="text-4xl mb-2">📝</div>
+                        <div class="font-bold text-sm">Évaluer</div>
+                    </button>
+                    <button onclick="showStep(5)" class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+                        <div class="text-4xl mb-2">📊</div>
+                        <div class="font-bold text-sm">Résultats</div>
+                    </button>
+                    <button onclick="exporterBase()" class="bg-green-50 p-6 rounded-lg shadow hover:shadow-lg transition border-2 border-green-200">
+                        <div class="text-4xl mb-2">📤</div>
+                        <div class="font-bold text-sm text-green-700">Export Base</div>
+                    </button>
+                    <button onclick="showImport()" class="bg-orange-50 p-6 rounded-lg shadow hover:shadow-lg transition border-2 border-orange-200">
+                        <div class="text-4xl mb-2">📥</div>
+                        <div class="font-bold text-sm text-orange-700">Import/Restaurer</div>
+                    </button>
+                </div>
+
+                <!-- Vue Manager -->
+                <div id="managerView" class="hidden">
+                    <div class="bg-white rounded-lg shadow p-6 mb-6">
+                        <h2 class="text-2xl font-bold mb-4">👥 Mon Équipe</h2>
+                        <div id="managerTeam">Chargement...</div>
+                    </div>
+                    <button onclick="showEvalManager()" class="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700">
+                        📝 Évaluer mes collaborateurs
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation par étapes (ADMIN uniquement) -->
+        <div id="navSteps" class="hidden bg-white border-b">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex overflow-x-auto">
+                    <button onclick="showStep(0)" id="tab0" class="px-6 py-4 border-b-2 border-transparent hover:border-teal-500 whitespace-nowrap">
+                        0️⃣ Utilisateurs
+                    </button>
+                    <button onclick="showStep(1)" id="tab1" class="px-6 py-4 border-b-2 border-transparent hover:border-teal-500 whitespace-nowrap">
+                        1️⃣ Postes
+                    </button>
+                    <button onclick="showStep(2)" id="tab2" class="px-6 py-4 border-b-2 border-transparent hover:border-teal-500 whitespace-nowrap">
+                        2️⃣ Compétences
+                    </button>
+                    <button onclick="showStep(3)" id="tab3" class="px-6 py-4 border-b-2 border-transparent hover:border-teal-500 whitespace-nowrap">
+                        3️⃣ Salariés
+                    </button>
+                    <button onclick="showStep(4)" id="tab4" class="px-6 py-4 border-b-2 border-transparent hover:border-teal-500 whitespace-nowrap">
+                        4️⃣ Évaluer
+                    </button>
+                    <button onclick="showStep(5)" id="tab5" class="px-6 py-4 border-b-2 border-transparent hover:border-teal-500 whitespace-nowrap">
+                        📊 Résultats
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <main class="max-w-7xl mx-auto px-4 py-8">
+            
+            <!-- ÉTAPE 0 : GESTION UTILISATEURS -->
+            <div id="step0" class="hidden">
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 class="text-2xl font-bold mb-4">👥 Créer un Manager</h2>
+                    <p class="text-gray-600 mb-6">Les managers pourront se connecter et évaluer leurs équipes</p>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <input id="mgrEmail" placeholder="Email du manager" class="px-3 py-2 border rounded-lg">
+                        <input id="mgrNom" placeholder="Nom complet" class="px-3 py-2 border rounded-lg">
+                        <input id="mgrPassword" type="password" placeholder="Mot de passe" class="px-3 py-2 border rounded-lg col-span-2">
+                    </div>
+                    <button onclick="creerManager()" class="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700">
+                        ➕ Créer Manager
+                    </button>
+                    <div id="mgrStatus" class="hidden mt-4 p-3 rounded-lg text-sm"></div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="font-bold mb-4">Liste des Managers</h3>
+                    <div id="listeManagers">Chargement...</div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 1 : POSTES -->
+            <div id="step1" class="hidden">
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 class="text-2xl font-bold mb-4">📋 Créer les Postes</h2>
+                    <p class="text-gray-600 mb-6">Définissez tous les postes de votre entreprise</p>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <input id="posteNom" placeholder="Nom du poste" class="px-3 py-2 border rounded-lg">
+                        <input id="posteDesc" placeholder="Description" class="px-3 py-2 border rounded-lg">
+                    </div>
+                    <button onclick="ajouterPoste()" class="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700">
+                        ➕ Ajouter Poste
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="font-bold mb-4">Liste des Postes</h3>
+                    <div id="listePostes">Chargement...</div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 2 : COMPÉTENCES PAR POSTE -->
+            <div id="step2" class="hidden">
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 class="text-2xl font-bold mb-4">🎯 Compétences par Poste</h2>
+                    <p class="text-gray-600 mb-6">Définissez les compétences requises pour chaque poste</p>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <select id="compPosteSelect" class="px-3 py-2 border rounded-lg">
+                            <option value="">Sélectionner un poste</option>
+                        </select>
+                        <input id="compNom" placeholder="Nom compétence" class="px-3 py-2 border rounded-lg">
+                        <select id="compCategorie" class="px-3 py-2 border rounded-lg">
+                            <option>Technique</option>
+                            <option>Sécurité</option>
+                            <option>Qualité</option>
+                            <option>Management</option>
+                            <option>Relationnelle</option>
+                        </select>
+                        <input id="compNiveauReqis" type="number" min="0" max="5" placeholder="Niveau requis (0-5)" class="px-3 py-2 border rounded-lg">
+                    </div>
+                    <button onclick="ajouterCompetencePoste()" class="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700">
+                        ➕ Ajouter Compétence
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="font-bold mb-4">Compétences par Poste</h3>
+                    <div id="listeCompetencesPostes">Chargement...</div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 3 : SALARIÉS -->
+            <div id="step3" class="hidden">
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 class="text-2xl font-bold mb-4">👤 Créer un Salarié</h2>
+                    <p class="text-gray-600 mb-6">Ajoutez un salarié et assignez-le à un poste et un manager</p>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <input id="salNom" placeholder="Nom" class="px-3 py-2 border rounded-lg">
+                        <input id="salPrenom" placeholder="Prénom" class="px-3 py-2 border rounded-lg">
+                        <input id="salEmail" placeholder="Email" class="px-3 py-2 border rounded-lg col-span-2">
+                        <select id="salPoste" class="px-3 py-2 border rounded-lg">
+                            <option value="">Sélectionner un poste</option>
+                        </select>
+                        <select id="salManager" class="px-3 py-2 border rounded-lg">
+                            <option value="">Sélectionner un manager</option>
+                        </select>
+                    </div>
+                    <button onclick="ajouterSalarie()" class="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700">
+                        ➕ Ajouter Salarié
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="font-bold mb-4">Liste des Salariés</h3>
+                    <div id="listeSalaries">Chargement...</div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 4 : ÉVALUER (ADMIN) -->
+            <div id="step4" class="hidden">
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 class="text-2xl font-bold mb-4">📝 Évaluer les Salariés</h2>
+                    <p class="text-gray-600 mb-6">Évaluez le niveau actuel de chaque salarié</p>
+                    
+                    <div class="mb-4">
+                        <select id="evalSalarie" onchange="chargerCompetencesSalarie()" class="w-full px-3 py-2 border rounded-lg">
+                            <option value="">Sélectionner un salarié</option>
+                        </select>
+                    </div>
+
+                    <div id="evalCompetences" class="space-y-3"></div>
+                    
+                    <button onclick="enregistrerEvaluations()" id="btnSaveEval" class="hidden mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                        💾 Enregistrer Évaluations
+                    </button>
+                </div>
+            </div>
+
+            <!-- ÉVALUER (MANAGER) -->
+            <div id="stepEvalManager" class="hidden">
+                <!-- Onglet évaluation -->
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 class="text-2xl font-bold mb-4">📝 Évaluer Mon Équipe</h2>
+                    <p class="text-gray-600 mb-6">Modifiez les niveaux de compétences de vos collaborateurs</p>
+                    
+                    <div class="mb-4">
+                        <select id="evalManagerSalarie" onchange="chargerCompetencesSalarieManager()" class="w-full px-3 py-2 border rounded-lg">
+                            <option value="">Sélectionner un collaborateur</option>
+                        </select>
+                    </div>
+
+                    <div id="evalManagerCompetences" class="space-y-3"></div>
+                    
+                    <button onclick="enregistrerEvaluationsManager()" id="btnSaveEvalManager" class="hidden mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                        💾 Enregistrer
+                    </button>
+                </div>
+
+                <!-- Onglet écarts de l'équipe -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-2xl font-bold mb-4">📊 Écarts de Compétences - Mon Équipe</h2>
+                    <p class="text-gray-600 mb-6">Visualisez les besoins en formation de votre équipe</p>
+                    
+                    <!-- KPIs -->
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div class="bg-blue-50 rounded-lg p-4 text-center">
+                            <div class="text-3xl font-bold text-blue-600" id="managerCollabs">0</div>
+                            <div class="text-sm text-gray-600">Collaborateurs</div>
+                        </div>
+                        <div class="bg-orange-50 rounded-lg p-4 text-center">
+                            <div class="text-3xl font-bold text-orange-600" id="managerEcarts">0</div>
+                            <div class="text-sm text-gray-600">Écarts</div>
+                        </div>
+                        <div class="bg-purple-50 rounded-lg p-4 text-center">
+                            <div class="text-3xl font-bold text-purple-600" id="managerComps">0</div>
+                            <div class="text-sm text-gray-600">Compétences à former</div>
+                        </div>
+                    </div>
+
+                    <!-- Bouton rafraîchir -->
+                    <button onclick="chargerEcartsManager()" class="mb-4 px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700">
+                        🔄 Actualiser
+                    </button>
+
+                    <!-- Tableau des écarts -->
+                    <div id="tableEcartsManager"></div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 5 : RÉSULTATS -->
+            <div id="step5" class="hidden">
+                <div class="grid grid-cols-4 gap-4 mb-8">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="text-3xl font-bold" id="resCollabs">0</div>
+                        <div class="text-sm text-gray-600">Salariés</div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="text-3xl font-bold" id="resPostes">0</div>
+                        <div class="text-sm text-gray-600">Postes</div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="text-3xl font-bold" id="resComps">0</div>
+                        <div class="text-sm text-gray-600">Compétences</div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="text-3xl font-bold text-red-600" id="resEcarts">0</div>
+                        <div class="text-sm text-gray-600">Écarts</div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="font-bold mb-4">📊 Écarts de Compétences</h3>
+                    <div id="tableEcarts">Chargement...</div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+    const sb = window.supabase.createClient(
+        'https://dqmzvxourispelgvjwze.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRxbXp2eG91cmlzcGVsZ3Zqd3plIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMzI5MTUsImV4cCI6MjA4NjgwODkxNX0.scxYsQxPypHIx1RlwZhN5jHQs0GTFjliZhU6IWP-qtw'
+    );
+
+    // ⚠️ CONFIGURATION EDGE FUNCTION
+    // Après avoir déployé l'Edge Function, mettez son URL ici
+    const EDGE_FUNCTION_URL = 'https://dqmzvxourispelgvjwze.supabase.co/functions/v1/create-manager';
+
+    let entrepriseId = null;
+    let userRole = null;
+    let currentUserId = null;
+
+    // DÉTECTER SI ON ARRIVE DEPUIS UN LIEN DE RESET PASSWORD
+    window.addEventListener('DOMContentLoaded', async () => {
+        // Vérifier si l'URL contient un hash de reset password
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const type = hashParams.get('type');
+
+        if (type === 'recovery' && accessToken) {
+            // Afficher le formulaire de nouveau mot de passe
+            document.getElementById('loginFormContainer').classList.add('hidden');
+            document.getElementById('resetFormContainer').classList.add('hidden');
+            document.getElementById('newPasswordContainer').classList.remove('hidden');
+        }
+    });
+
+    // GESTION DU NOUVEAU MOT DE PASSE
+    document.getElementById('newPasswordForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const password = document.getElementById('newPassword').value;
+        const confirm = document.getElementById('newPasswordConfirm').value;
+        const errorEl = document.getElementById('newPasswordError');
+        const successEl = document.getElementById('newPasswordSuccess');
+
+        errorEl.classList.add('hidden');
+        successEl.classList.add('hidden');
+
+        if (password !== confirm) {
+            errorEl.textContent = 'Les mots de passe ne correspondent pas';
+            errorEl.classList.remove('hidden');
+            return;
+        }
+
+        if (password.length < 6) {
+            errorEl.textContent = 'Le mot de passe doit contenir au moins 6 caractères';
+            errorEl.classList.remove('hidden');
+            return;
+        }
+
+        try {
+            const { error } = await sb.auth.updateUser({ password: password });
+
+            if (error) throw error;
+
+            successEl.textContent = '✅ Mot de passe changé avec succès ! Vous allez être redirigé...';
+            successEl.classList.remove('hidden');
+
+            // Rediriger vers la page de connexion après 2 secondes
+            setTimeout(() => {
+                window.location.href = window.location.origin + window.location.pathname;
+            }, 2000);
+
+        } catch (error) {
+            errorEl.textContent = error.message || 'Erreur lors du changement de mot de passe';
+            errorEl.classList.remove('hidden');
+        }
+    };
+
+    // LOGIN
+    document.getElementById('loginForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const errorEl = document.getElementById('loginError');
+        errorEl.classList.add('hidden');
+        
+        try {
+            // Étape 1 : Authentification
+            const { data, error } = await sb.auth.signInWithPassword({
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value
+            });
+            
+            if (error) {
+                console.error('Auth error:', error);
+                throw new Error('Email ou mot de passe incorrect');
+            }
+
+            if (!data || !data.user) {
+                throw new Error('Erreur de connexion : données utilisateur manquantes');
+            }
+
+            currentUserId = data.user.id;
+            
+            // Étape 2 : Récupération du profil
+            const { data: profil, error: profilError } = await sb.from('profils')
+                .select('entreprise_id, role, nom_complet, email')
+                .eq('id', data.user.id)
+                .single();
+            
+            if (profilError) {
+                console.error('Profil error:', profilError);
+                throw new Error(`Erreur profil : ${profilError.message}`);
+            }
+            
+            if (!profil) {
+                throw new Error('Aucun profil trouvé pour cet utilisateur. Contactez l\'administrateur.');
+            }
+            
+            if (!profil.entreprise_id) {
+                throw new Error('Profil incomplet : entreprise_id manquant. Contactez l\'administrateur.');
+            }
+            
+            // Étape 3 : Configuration
+            entrepriseId = profil.entreprise_id;
+            userRole = profil.role;
+            
+            const roleLabel = userRole === 'admin_rh' ? 'Admin RH' : 'Manager';
+            document.getElementById('userInfo').textContent = `${profil.nom_complet || profil.email || data.user.email} (${roleLabel})`;
+            
+            // Étape 4 : Affichage
+            document.getElementById('pageLogin').classList.add('hidden');
+            document.getElementById('pageDashboard').classList.remove('hidden');
+            
+            showHome();
+        } catch (error) {
+            console.error('Login error:', error);
+            errorEl.textContent = error.message || 'Erreur de connexion';
+            errorEl.classList.remove('hidden');
+        }
+    };
+
+    async function logout() {
+        await sb.auth.signOut();
+        location.reload();
+    }
+
+    // RÉINITIALISATION MOT DE PASSE
+    function showPasswordReset() {
+        document.getElementById('loginFormContainer').classList.add('hidden');
+        document.getElementById('resetFormContainer').classList.remove('hidden');
+        document.getElementById('loginError').classList.add('hidden');
+        document.getElementById('loginSuccess').classList.add('hidden');
+    }
+
+    function showLoginForm() {
+        document.getElementById('loginFormContainer').classList.remove('hidden');
+        document.getElementById('resetFormContainer').classList.add('hidden');
+        document.getElementById('resetError').classList.add('hidden');
+        document.getElementById('resetSuccess').classList.add('hidden');
+    }
+
+    document.getElementById('resetForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('resetEmail').value;
+        const errorEl = document.getElementById('resetError');
+        const successEl = document.getElementById('resetSuccess');
+        
+        errorEl.classList.add('hidden');
+        successEl.classList.add('hidden');
+
+        try {
+            const { error } = await sb.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin + window.location.pathname
+            });
+
+            if (error) throw error;
+
+            successEl.textContent = `Email de réinitialisation envoyé à ${email}. Vérifiez votre boîte mail.`;
+            successEl.classList.remove('hidden');
+            
+            document.getElementById('resetEmail').value = '';
+        } catch (error) {
+            errorEl.textContent = error.message || 'Erreur lors de l\'envoi de l\'email';
+            errorEl.classList.remove('hidden');
+        }
+    };
+
+    // NAVIGATION
+    function showHome() {
+        // Cacher tout
+        document.getElementById('pageHome').classList.add('hidden');
+        document.getElementById('navSteps').classList.add('hidden');
+        for (let i = 0; i <= 5; i++) {
+            document.getElementById('step' + i).classList.add('hidden');
+        }
+        document.getElementById('stepEvalManager').classList.add('hidden');
+
+        // Afficher accueil
+        document.getElementById('pageHome').classList.remove('hidden');
+        
+        if (userRole === 'admin_rh') {
+            document.getElementById('adminActions').classList.remove('hidden');
+            document.getElementById('managerView').classList.add('hidden');
+        } else {
+            document.getElementById('adminActions').classList.add('hidden');
+            document.getElementById('managerView').classList.remove('hidden');
+            chargerEquipeManager();
+        }
+
+        chargerKPIsAccueil();
+    }
+
+    function showStep(num) {
+        document.getElementById('pageHome').classList.add('hidden');
+        document.getElementById('navSteps').classList.remove('hidden');
+        document.getElementById('stepEvalManager').classList.add('hidden');
+
+        for (let i = 0; i <= 5; i++) {
+            document.getElementById('step' + i).classList.add('hidden');
+            document.getElementById('tab' + i)?.classList.remove('border-teal-500');
+        }
+        document.getElementById('step' + num).classList.remove('hidden');
+        document.getElementById('tab' + num).classList.add('border-teal-500');
+
+        if (num === 0) chargerManagers();
+        if (num === 1) chargerPostes();
+        if (num === 2) { chargerPostes(); chargerCompetencesPostes(); }
+        if (num === 3) { chargerPostes(); chargerManagers(); chargerSalaries(); }
+        if (num === 4) chargerSalaries();
+        if (num === 5) chargerResultats();
+    }
+
+    function showEvalManager() {
+        document.getElementById('pageHome').classList.add('hidden');
+        document.getElementById('navSteps').classList.add('hidden');
+        for (let i = 0; i <= 5; i++) {
+            document.getElementById('step' + i).classList.add('hidden');
+        }
+        document.getElementById('stepEvalManager').classList.remove('hidden');
+        chargerSalariesManager();
+        chargerEcartsManager(); // Charger les écarts au chargement
+    }
+
+    // ACCUEIL
+    async function chargerKPIsAccueil() {
+        const { data: collabs } = await sb.from('collaborateurs').select('*').eq('entreprise_id', entrepriseId);
+        const { data: postes } = await sb.from('metiers').select('*').eq('entreprise_id', entrepriseId);
+        const { data: comps } = await sb.from('competences').select('*').eq('entreprise_id', entrepriseId);
+        const { data: evals } = await sb.from('evaluations_competences').select('*');
+
+        document.getElementById('homeCollabs').textContent = (collabs || []).length;
+        document.getElementById('homePostes').textContent = (postes || []).length;
+        document.getElementById('homeComps').textContent = (comps || []).length;
+        
+        const ecarts = (evals || []).filter(e => e.niveau_actuel < e.niveau_requis).length;
+        document.getElementById('homeEcarts').textContent = ecarts;
+    }
+
+    async function chargerEquipeManager() {
+        // Charger tous les collaborateurs du manager (N) + leurs sous-collaborateurs (si manager)
+        const { data: directs } = await sb.from('collaborateurs').select(`
+            *, metier:metiers(nom)
+        `).eq('manager_id', currentUserId);
+
+        const el = document.getElementById('managerTeam');
+        if (!directs || directs.length === 0) {
+            el.innerHTML = '<p class="text-gray-500">Aucun collaborateur assigné</p>';
+        } else {
+            el.innerHTML = '<div class="space-y-2">' + directs.map(c => `
+                <div class="p-3 bg-gray-50 rounded">
+                    <span class="font-medium">${c.nom} ${c.prenom}</span>
+                    <span class="text-sm text-gray-600 ml-2">${c.metier?.nom || 'Sans poste'}</span>
+                </div>
+            `).join('') + '</div>';
+        }
+    }
+
+    // ÉTAPE 0 : MANAGERS
+    async function creerManager() {
+        const email = document.getElementById('mgrEmail').value.trim();
+        const nom = document.getElementById('mgrNom').value.trim();
+        const password = document.getElementById('mgrPassword').value.trim();
+
+        if (!email || !nom || !password) {
+            alert('Tous les champs sont requis');
+            return;
+        }
+
+        if (password.length < 6) {
+            alert('Le mot de passe doit contenir au moins 6 caractères');
+            return;
+        }
+
+        // Générer le code SQL
+        const sqlCode = `-- Créer le manager : ${nom}
+DO $$
+DECLARE
+    v_user_id UUID;
+BEGIN
+    -- Créer le compte auth
+    INSERT INTO auth.users (
+        instance_id, id, aud, role, email, encrypted_password,
+        email_confirmed_at, created_at, updated_at,
+        raw_app_meta_data, raw_user_meta_data,
+        confirmation_token, email_change, email_change_token_new, recovery_token
+    ) VALUES (
+        '00000000-0000-0000-0000-000000000000',
+        gen_random_uuid(),
+        'authenticated',
+        'authenticated',
+        '${email}',
+        crypt('${password}', gen_salt('bf')),
+        NOW(), NOW(), NOW(),
+        '{"provider":"email","providers":["email"]}',
+        '{}',
+        '', '', '', ''
+    )
+    RETURNING id INTO v_user_id;
+
+    -- Créer le profil
+    INSERT INTO profils (id, entreprise_id, email, nom_complet, role, actif)
+    VALUES (v_user_id, '${entrepriseId}', '${email}', '${nom}', 'manager', true);
+
+    RAISE NOTICE 'Manager créé : ${email}';
+END $$;`;
+
+        const status = document.getElementById('mgrStatus');
+        status.className = 'mt-4 p-3 rounded-lg text-sm bg-blue-50 text-blue-800 border border-blue-200';
+        status.innerHTML = `
+            <div class="mb-3">
+                <strong>📋 Code SQL généré</strong>
+                <p class="text-xs mt-1">Copiez ce code et collez-le dans Supabase → SQL Editor</p>
+            </div>
+            <div class="bg-white p-3 rounded border border-blue-300 mb-3 max-h-48 overflow-y-auto">
+                <pre class="text-xs" style="white-space: pre-wrap;">${sqlCode}</pre>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="copierSQL(this)" class="flex-1 px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700">
+                    📋 Copier le code SQL
+                </button>
+                <button onclick="ouvrirSupabase()" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    🔗 Ouvrir Supabase SQL Editor
+                </button>
+            </div>
+            <div class="mt-3 text-xs">
+                <strong>Identifiants du manager :</strong><br>
+                Email : ${email}<br>
+                Mot de passe : ${password}
+            </div>
+        `;
+        status.classList.remove('hidden');
+
+        // Sauvegarder le code SQL dans un attribut pour le copier
+        status.dataset.sqlCode = sqlCode;
+    }
+
+    function copierSQL(button) {
+        const status = document.getElementById('mgrStatus');
+        const sqlCode = status.dataset.sqlCode;
+        
+        navigator.clipboard.writeText(sqlCode).then(() => {
+            const originalText = button.textContent;
+            button.textContent = '✅ Copié !';
+            button.classList.remove('bg-teal-600', 'hover:bg-teal-700');
+            button.classList.add('bg-green-600');
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.classList.remove('bg-green-600');
+                button.classList.add('bg-teal-600', 'hover:bg-teal-700');
+            }, 2000);
+        }).catch(() => {
+            alert('Erreur de copie. Sélectionnez et copiez manuellement le code ci-dessus.');
+        });
+    }
+
+    function ouvrirSupabase() {
+        window.open('https://supabase.com/dashboard/project/dqmzvxourispelgvjwze/sql/new', '_blank');
+    }
+
+    async function chargerManagers() {
+        const { data } = await sb.from('profils').select('*')
+            .eq('entreprise_id', entrepriseId)
+            .eq('role', 'manager');
+
+        const el = document.getElementById('listeManagers');
+        if (!data || data.length === 0) {
+            el.innerHTML = '<p class="text-gray-500">Aucun manager</p>';
+        } else {
+            el.innerHTML = '<div class="space-y-2">' + data.map(m => `
+                <div class="p-3 bg-gray-50 rounded flex justify-between items-center">
+                    <div class="flex-1">
+                        <span class="font-medium block">${m.nom_complet}</span>
+                        <span class="text-sm text-gray-600">${m.email}</span>
+                    </div>
+                    <button onclick="supprimerManager('${m.id}', '${m.nom_complet}')" 
+                        class="ml-4 px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600">
+                        🗑️ Supprimer
+                    </button>
+                </div>
+            `).join('') + '</div>';
+        }
+
+        // Select salarié
+        const select = document.getElementById('salManager');
+        select.innerHTML = '<option value="">Sélectionner un manager</option>' +
+            (data || []).map(m => `<option value="${m.id}">${m.nom_complet}</option>`).join('');
+    }
+
+    async function supprimerManager(id, nom) {
+        if (!confirm(`Supprimer le manager "${nom}" ?\n\n⚠️ Les salariés rattachés à ce manager seront sans manager.`)) {
+            return;
+        }
+
+        try {
+            // Détacher les salariés de ce manager
+            await sb.from('collaborateurs')
+                .update({ manager_id: null })
+                .eq('manager_id', id);
+
+            // Supprimer le profil
+            await sb.from('profils')
+                .delete()
+                .eq('id', id);
+
+            // Supprimer le compte auth
+            // Note: nécessite des permissions spéciales, peut échouer
+            // Le compte auth restera mais sans profil
+            
+            alert('✅ Manager supprimé');
+            chargerManagers();
+            chargerSalaries();
+        } catch (error) {
+            console.error('Erreur:', error);
+            alert('❌ Erreur : ' + error.message);
+        }
+    }
+
+    // ÉTAPE 1-2-3 identiques à avant (code déjà écrit)
+    async function ajouterPoste() {
+        const nom = document.getElementById('posteNom').value.trim();
+        if (!nom) { alert('Nom obligatoire'); return; }
+        await sb.from('metiers').insert({
+            entreprise_id: entrepriseId,
+            nom: nom,
+            description: document.getElementById('posteDesc').value.trim()
+        });
+        document.getElementById('posteNom').value = '';
+        document.getElementById('posteDesc').value = '';
+        chargerPostes();
+    }
+
+    async function chargerPostes() {
+        const { data } = await sb.from('metiers').select('*').eq('entreprise_id', entrepriseId);
+        const el = document.getElementById('listePostes');
+        el.innerHTML = !data || data.length === 0 ? '<p class="text-gray-500">Aucun poste</p>' :
+            '<div class="space-y-2">' + data.map(p => `
+                <div class="p-3 bg-gray-50 rounded flex justify-between items-center">
+                    <span class="font-medium">${p.nom}</span>
+                    <button onclick="supprimerPoste('${p.id}', '${p.nom}')" 
+                        class="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600">
+                        🗑️ Supprimer
+                    </button>
+                </div>
+            `).join('') + '</div>';
+        
+        const opts = '<option value="">Sélectionner un poste</option>' +
+            (data || []).map(p => `<option value="${p.id}">${p.nom}</option>`).join('');
+        document.getElementById('compPosteSelect').innerHTML = opts;
+        document.getElementById('salPoste').innerHTML = opts;
+    }
+
+    async function supprimerPoste(id, nom) {
+        if (!confirm(`Supprimer le poste "${nom}" ?\n\n⚠️ Cela supprimera aussi :\n- Les compétences associées\n- Les évaluations des salariés de ce poste`)) {
+            return;
+        }
+
+        try {
+            // Supprimer les évaluations
+            const { data: salaries } = await sb.from('collaborateurs')
+                .select('id')
+                .eq('metier_id', id);
+            
+            if (salaries && salaries.length > 0) {
+                const salarieIds = salaries.map(s => s.id);
+                await sb.from('evaluations_competences')
+                    .delete()
+                    .in('collaborateur_id', salarieIds);
+            }
+
+            // Supprimer les niveaux attendus
+            await sb.from('niveaux_attendus')
+                .delete()
+                .eq('metier_id', id);
+
+            // Mettre les salariés sans poste
+            await sb.from('collaborateurs')
+                .update({ metier_id: null })
+                .eq('metier_id', id);
+
+            // Supprimer le poste
+            const { error } = await sb.from('metiers')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
+            alert('✅ Poste supprimé');
+            chargerPostes();
+            chargerCompetencesPostes();
+        } catch (error) {
+            console.error('Erreur:', error);
+            alert('❌ Erreur : ' + error.message);
+        }
+    }
+
+    async function ajouterCompetencePoste() {
+        const posteId = document.getElementById('compPosteSelect').value;
+        const nom = document.getElementById('compNom').value.trim();
+        const niveau = parseInt(document.getElementById('compNiveauReqis').value);
+        
+        if (!posteId || !nom || isNaN(niveau)) { 
+            alert('Tous les champs requis'); 
+            return; 
+        }
+
+        try {
+            // Vérifier si la compétence existe déjà
+            let { data: existingComp } = await sb.from('competences')
+                .select('id')
+                .eq('entreprise_id', entrepriseId)
+                .eq('nom', nom)
+                .single();
+
+            let competenceId;
+
+            if (existingComp) {
+                // La compétence existe déjà, on la réutilise
+                competenceId = existingComp.id;
+            } else {
+                // Créer une nouvelle compétence
+                const { data: newComp, error: compError } = await sb.from('competences').insert({
+                    entreprise_id: entrepriseId,
+                    nom: nom,
+                    categorie: document.getElementById('compCategorie').value
+                }).select().single();
+
+                if (compError) {
+                    alert('Erreur lors de la création de la compétence : ' + compError.message);
+                    return;
+                }
+
+                competenceId = newComp.id;
+            }
+
+            // Vérifier si cette compétence n'est pas déjà assignée à ce poste
+            const { data: existingNiveau } = await sb.from('niveaux_attendus')
+                .select('id')
+                .eq('metier_id', posteId)
+                .eq('competence_id', competenceId)
+                .single();
+
+            if (existingNiveau) {
+                alert('Cette compétence est déjà assignée à ce poste');
+                return;
+            }
+
+            // Ajouter le niveau attendu
+            const { error: niveauError } = await sb.from('niveaux_attendus').insert({
+                metier_id: posteId,
+                competence_id: competenceId,
+                niveau_requis: niveau
+            });
+
+            if (niveauError) {
+                alert('Erreur : ' + niveauError.message);
+                return;
+            }
+
+            // Succès !
+            document.getElementById('compNom').value = '';
+            document.getElementById('compNiveauReqis').value = '';
+            chargerCompetencesPostes();
+
+        } catch (error) {
+            console.error('Erreur:', error);
+            alert('Une erreur est survenue : ' + error.message);
+        }
+    }
+
+    async function chargerCompetencesPostes() {
+        const el = document.getElementById('listeCompetencesPostes');
+
+        // Charger postes et compétences en parallèle
+        const [{ data: postes, error: postesError }, { data: comps, error: compsError }] =
+            await Promise.all([
+                sb.from('metiers').select('id, nom').eq('entreprise_id', entrepriseId),
+                sb.from('competences').select('id, nom, categorie').eq('entreprise_id', entrepriseId)
+            ]);
+
+        if (postesError) {
+            el.innerHTML = `<p class="text-red-600">Erreur chargement postes : ${postesError.message}</p>`;
+            return;
+        }
+        if (compsError) {
+            el.innerHTML = `<p class="text-red-600">Erreur chargement compétences : ${compsError.message}</p>`;
+            return;
+        }
+
+        const metierMap = {};
+        (postes || []).forEach(p => { metierMap[p.id] = p.nom; });
+
+        const compMap = {};
+        (comps || []).forEach(c => { compMap[c.id] = { nom: c.nom, categorie: c.categorie }; });
+
+        // Charger les niveaux attendus (sans embed)
+        const { data: niveaux, error: niveauxError } = await sb
+            .from('niveaux_attendus')
+            .select('id, metier_id, competence_id, niveau_requis');
+
+        if (niveauxError) {
+            el.innerHTML = `<p class="text-red-600">Erreur chargement niveaux attendus : ${niveauxError.message}</p>`;
+            return;
+        }
+
+        const data = (niveaux || []).filter(
+            n => metierMap[n.metier_id] && compMap[n.competence_id]
+        );
+
+        if (!data || data.length === 0) {
+            el.innerHTML = '<p class="text-gray-500">Aucune compétence</p>';
+        } else {
+            const byPoste = {};
+            data.forEach(n => {
+                const posteNom = metierMap[n.metier_id] || 'Sans poste';
+                if (!byPoste[posteNom]) byPoste[posteNom] = [];
+                byPoste[posteNom].push(n);
+            });
+
+            el.innerHTML = Object.entries(byPoste).map(([posteNom, compsPoste]) => `
+                <div class="border rounded-lg p-4">
+                    <h4 class="font-bold mb-3">${posteNom}</h4>
+                    <div class="space-y-2">
+                        ${compsPoste.map(c => {
+                            const comp = compMap[c.competence_id] || { nom: 'Inconnue', categorie: '' };
+                            return `
+                                <div class="flex justify-between items-center text-sm bg-gray-50 p-2 rounded">
+                                    <span>${comp.nom} (${comp.categorie}) → ${c.niveau_requis}/5</span>
+                                    <button onclick="supprimerCompetence('${c.id}', '${comp.nom}')" 
+                                        class="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600">
+                                        🗑️
+                                    </button>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+
+    async function supprimerCompetence(niveauId, nom) {
+        if (!confirm(`Supprimer la compétence "${nom}" de ce poste ?\n\n⚠️ Cela supprimera aussi les évaluations associées.`)) {
+            return;
+        }
+
+        try {
+            // Récupérer l'info avant suppression
+            const { data: niveau } = await sb.from('niveaux_attendus')
+                .select('competence_id, metier_id')
+                .eq('id', niveauId)
+                .single();
+
+            if (niveau) {
+                // Supprimer les évaluations
+                const { data: salaries } = await sb.from('collaborateurs')
+                    .select('id')
+                    .eq('metier_id', niveau.metier_id);
+
+                if (salaries && salaries.length > 0) {
+                    const salarieIds = salaries.map(s => s.id);
+                    await sb.from('evaluations_competences')
+                        .delete()
+                        .eq('competence_id', niveau.competence_id)
+                        .in('collaborateur_id', salarieIds);
+                }
+            }
+
+            // Supprimer le niveau attendu
+            const { error } = await sb.from('niveaux_attendus')
+                .delete()
+                .eq('id', niveauId);
+
+            if (error) throw error;
+
+            alert('✅ Compétence supprimée');
+            chargerCompetencesPostes();
+        } catch (error) {
+            console.error('Erreur:', error);
+            alert('❌ Erreur : ' + error.message);
+        }
+    }
+
+    async function ajouterSalarie() {
+        const nom = document.getElementById('salNom').value.trim();
+        const email = document.getElementById('salEmail').value.trim();
+        const posteId = document.getElementById('salPoste').value;
+        const managerId = document.getElementById('salManager').value;
+
+        if (!nom || !email || !posteId) {
+            alert('Nom, email et poste requis');
+            return;
+        }
+
+        try {
+            // Vérifier si l'email existe déjà
+            const { data: existing } = await sb.from('collaborateurs')
+                .select('id')
+                .eq('entreprise_id', entrepriseId)
+                .eq('email', email)
+                .single();
+
+            if (existing) {
+                alert('Un salarié avec cet email existe déjà');
+                return;
+            }
+
+            // Créer le salarié
+            const { error } = await sb.from('collaborateurs').insert({
+                entreprise_id: entrepriseId,
+                nom: nom,
+                prenom: document.getElementById('salPrenom').value.trim(),
+                email: email,
+                metier_id: posteId,
+                manager_id: managerId || null,
+                actif: true
+            });
+
+            if (error) {
+                console.error('Erreur création salarié:', error);
+                alert('Erreur : ' + error.message);
+                return;
+            }
+
+            // Succès !
+            document.getElementById('salNom').value = '';
+            document.getElementById('salPrenom').value = '';
+            document.getElementById('salEmail').value = '';
+            chargerSalaries();
+
+        } catch (error) {
+            console.error('Erreur:', error);
+            alert('Une erreur est survenue : ' + error.message);
+        }
+    }
+
+    async function chargerSalaries() {
+        const { data: collabs, error } = await sb.from('collaborateurs').select('*');
+
+        console.log('chargerSalaries - collabs:', collabs, 'error:', error);
+
+        const el = document.getElementById('listeSalaries');
+
+        if (error) {
+            el.innerHTML = `<p class="text-red-600">Erreur chargement salariés : ${error.message}</p>`;
+            return;
+        }
+
+        if (!collabs || collabs.length === 0) {
+            el.innerHTML = '<p class="text-gray-500">Aucun salarié</p>';
+            return;
+        }
+
+        // Charger les postes et managers séparément pour éviter les embeds ambigus
+        const [{ data: postes }, { data: managers }] = await Promise.all([
+            sb.from('metiers').select('id, nom'),
+            sb.from('profils').select('id, nom_complet')
+        ]);
+
+        const metierMap = {};
+        (postes || []).forEach(p => { metierMap[p.id] = p.nom; });
+
+        const managerMap = {};
+        (managers || []).forEach(m => { managerMap[m.id] = m.nom_complet; });
+
+        el.innerHTML = '<div class="space-y-2">' + collabs.map(s => `
+                <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 flex justify-between items-center hover:bg-gray-100">
+                    <div class="flex-1">
+                        <div class="font-bold text-lg">${s.nom} ${s.prenom}</div>
+                        <div class="text-sm text-gray-600 mt-1">
+                            📧 ${s.email}<br>
+                            💼 ${metierMap[s.metier_id] || 'Sans poste'}<br>
+                            👤 Manager: ${managerMap[s.manager_id] || 'Aucun'}
+                        </div>
+                    </div>
+                    <button onclick="supprimerSalarie('${s.id}', '${s.nom} ${s.prenom}')" 
+                        class="ml-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm">
+                        🗑️ Supprimer
+                    </button>
+                </div>
+            `).join('') + '</div>';
+
+        const opts = '<option value="">Sélectionner un salarié</option>' +
+            (collabs || []).map(s => `<option value="${s.id}" data-metier="${s.metier_id}">${s.nom} ${s.prenom}</option>`).join('');
+        document.getElementById('evalSalarie').innerHTML = opts;
+    }
+
+    async function chargerSalariesManager() {
+        const { data } = await sb.from('collaborateurs').select('*, metier:metiers(nom)')
+            .eq('manager_id', currentUserId);
+
+        const select = document.getElementById('evalManagerSalarie');
+        select.innerHTML = '<option value="">Sélectionner un collaborateur</option>' +
+            (data || []).map(s => `<option value="${s.id}" data-metier="${s.metier_id}">${s.nom} ${s.prenom}</option>`).join('');
+    }
+
+    // ÉVALUER (ADMIN)
+    async function chargerCompetencesSalarie() {
+        const select = document.getElementById('evalSalarie');
+        const salId = select.value;
+        const metId = select.selectedOptions[0]?.dataset.metier;
+        if (!salId || !metId) return;
+
+        // Récupérer les niveaux attendus pour le poste
+        const { data: niveaux, error: niveauxError } = await sb
+            .from('niveaux_attendus')
+            .select('id, competence_id, niveau_requis')
+            .eq('metier_id', metId);
+
+        const el = document.getElementById('evalCompetences');
+
+        if (niveauxError) {
+            el.innerHTML = `<p class="text-red-600">Erreur chargement compétences : ${niveauxError.message}</p>`;
+            document.getElementById('btnSaveEval').classList.add('hidden');
+            return;
+        }
+
+        if (!niveaux || niveaux.length === 0) {
+            el.innerHTML = '<p class="text-gray-500">Aucune compétence pour ce poste</p>';
+            document.getElementById('btnSaveEval').classList.add('hidden');
+            return;
+        }
+
+        // Charger les définitions de compétences nécessaires
+        const compIds = [...new Set(niveaux.map(n => n.competence_id))];
+        const { data: comps } = await sb
+            .from('competences')
+            .select('id, nom, categorie')
+            .in('id', compIds);
+
+        const compMap = {};
+        (comps || []).forEach(c => { compMap[c.id] = c; });
+
+        // Récupérer les évaluations précédentes
+        const { data: evalsPrec } = await sb.from('evaluations_competences')
+            .select('competence_id, niveau_actuel, date_evaluation')
+            .eq('collaborateur_id', salId)
+            .order('date_evaluation', { ascending: false });
+
+        // Créer un map des dernières évaluations par compétence
+        const dernieresEvals = {};
+        (evalsPrec || []).forEach(e => {
+            if (!dernieresEvals[e.competence_id]) {
+                dernieresEvals[e.competence_id] = e;
+            }
+        });
+
+        el.innerHTML = '<div class="space-y-3">' + niveaux.map(n => {
+            const comp = compMap[n.competence_id] || { nom: 'Compétence inconnue' };
+            const derniere = dernieresEvals[n.competence_id];
+            const niveauPrec = derniere ? derniere.niveau_actuel : 0;
+            const datePrec = derniere ? new Date(derniere.date_evaluation).toLocaleDateString('fr-FR') : 'Jamais évalué';
+            
+            return `
+                <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex-1">
+                            <div class="font-bold text-lg">${comp.nom}</div>
+                            <div class="text-sm text-gray-600 mt-1">
+                                <span class="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
+                                    Requis: ${n.niveau_requis}/5
+                                </span>
+                                <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs ml-2">
+                                    Précédent: ${niveauPrec}/5 (${datePrec})
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm font-medium">Nouveau niveau :</label>
+                            <input type="number" min="0" max="5" 
+                                value="${niveauPrec}"
+                                data-comp="${n.competence_id}" 
+                                data-requis="${n.niveau_requis}"
+                                class="w-20 px-3 py-2 border-2 border-gray-300 rounded-lg text-center font-bold text-lg focus:border-teal-500 focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('') + '</div>';
+
+        document.getElementById('btnSaveEval').classList.remove('hidden');
+    }
+
+    async function enregistrerEvaluations() {
+        const salId = document.getElementById('evalSalarie').value;
+        const inputs = document.querySelectorAll('#evalCompetences input[data-comp]');
+        const evals = [];
+        
+        inputs.forEach(input => {
+            const val = parseInt(input.value);
+            if (!isNaN(val)) {
+                evals.push({
+                    collaborateur_id: salId,
+                    competence_id: input.dataset.comp,
+                    niveau_actuel: val,
+                    date_evaluation: new Date().toISOString().split('T')[0] // Format DATE: YYYY-MM-DD
+                });
+            }
+        });
+
+        if (evals.length === 0) { 
+            alert('Évaluez au moins 1 compétence'); 
+            return; 
+        }
+
+        try {
+            const { error } = await sb.from('evaluations_competences').insert(evals);
+            
+            if (error) {
+                console.error('Erreur insertion:', error);
+                alert('❌ Erreur : ' + error.message);
+                return;
+            }
+
+            alert(`✅ ${evals.length} évaluations enregistrées`);
+            document.getElementById('evalSalarie').value = '';
+            document.getElementById('evalCompetences').innerHTML = '';
+            document.getElementById('btnSaveEval').classList.add('hidden');
+            chargerResultats(); // Rafraîchir les résultats
+        } catch (error) {
+            console.error('Erreur:', error);
+            alert('❌ Erreur : ' + error.message);
+        }
+    }
+
+    // ÉVALUER (MANAGER)
+    async function chargerCompetencesSalarieManager() {
+        const select = document.getElementById('evalManagerSalarie');
+        const salId = select.value;
+        const metId = select.selectedOptions[0]?.dataset.metier;
+        if (!salId || !metId) return;
+
+        // Récupérer les niveaux attendus pour le poste
+        const { data: niveaux, error: niveauxError } = await sb
+            .from('niveaux_attendus')
+            .select('id, competence_id, niveau_requis')
+            .eq('metier_id', metId);
+
+        const el = document.getElementById('evalManagerCompetences');
+
+        if (niveauxError) {
+            el.innerHTML = `<p class="text-red-600">Erreur chargement compétences : ${niveauxError.message}</p>`;
+            document.getElementById('btnSaveEvalManager').classList.add('hidden');
+            return;
+        }
+
+        if (!niveaux || niveaux.length === 0) {
+            el.innerHTML = '<p class="text-gray-500">Aucune compétence</p>';
+            document.getElementById('btnSaveEvalManager').classList.add('hidden');
+            return;
+        }
+
+        // Charger les compétences nécessaires
+        const compIds = [...new Set(niveaux.map(n => n.competence_id))];
+        const { data: comps } = await sb
+            .from('competences')
+            .select('id, nom, categorie')
+            .in('id', compIds);
+
+        const compMap = {};
+        (comps || []).forEach(c => { compMap[c.id] = c; });
+
+        // Récupérer les évaluations précédentes
+        const { data: evalsPrec } = await sb.from('evaluations_competences')
+            .select('*')
+            .eq('collaborateur_id', salId)
+            .order('date_evaluation', { ascending: false });
+
+        // Créer un map des dernières évaluations par compétence
+        const dernieresEvals = {};
+        (evalsPrec || []).forEach(e => {
+            if (!dernieresEvals[e.competence_id]) {
+                dernieresEvals[e.competence_id] = e;
+            }
+        });
+
+        el.innerHTML = '<div class="space-y-3">' + niveaux.map(n => {
+            const comp = compMap[n.competence_id] || { nom: 'Compétence inconnue' };
+            const derniere = dernieresEvals[n.competence_id];
+            const niveauPrec = derniere ? derniere.niveau_actuel : 0;
+            const datePrec = derniere ? new Date(derniere.date_evaluation).toLocaleDateString('fr-FR') : 'Jamais évalué';
+            
+            return `
+                <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex-1">
+                            <div class="font-bold text-lg">${comp.nom}</div>
+                            <div class="text-sm text-gray-600 mt-1">
+                                <span class="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
+                                    Requis: ${n.niveau_requis}/5
+                                </span>
+                                <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs ml-2">
+                                    Précédent: ${niveauPrec}/5 (${datePrec})
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm font-medium">Nouveau niveau :</label>
+                            <input type="number" min="0" max="5" 
+                                value="${niveauPrec}"
+                                data-comp="${n.competence_id}" 
+                                data-requis="${n.niveau_requis}"
+                                data-evalid="${derniere?.id || ''}"
+                                class="w-20 px-3 py-2 border-2 border-gray-300 rounded-lg text-center font-bold text-lg focus:border-teal-500 focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('') + '</div>';
+
+        document.getElementById('btnSaveEvalManager').classList.remove('hidden');
+    }
+
+    async function enregistrerEvaluationsManager() {
+        const salId = document.getElementById('evalManagerSalarie').value;
+        const inputs = document.querySelectorAll('#evalManagerCompetences input[data-comp]');
+        
+        try {
+            let nbSaved = 0;
+            
+            for (const input of inputs) {
+                const val = parseInt(input.value);
+                if (!isNaN(val)) {
+                    const evalId = input.dataset.evalid;
+                    const data = {
+                        collaborateur_id: salId,
+                        competence_id: input.dataset.comp,
+                        niveau_actuel: val,
+                        date_evaluation: new Date().toISOString().split('T')[0] // Format DATE
+                    };
+
+                    if (evalId) {
+                        // Update
+                        const { error } = await sb.from('evaluations_competences')
+                            .update({ 
+                                niveau_actuel: val,
+                                date_evaluation: new Date().toISOString().split('T')[0]
+                            })
+                            .eq('id', evalId);
+                        
+                        if (error) throw error;
+                    } else {
+                        // Insert
+                        const { error } = await sb.from('evaluations_competences').insert(data);
+                        if (error) throw error;
+                    }
+                    nbSaved++;
+                }
+            }
+
+            if (nbSaved === 0) {
+                alert('Évaluez au moins 1 compétence');
+                return;
+            }
+
+            alert(`✅ ${nbSaved} évaluations enregistrées`);
+            document.getElementById('evalManagerSalarie').value = '';
+            document.getElementById('evalManagerCompetences').innerHTML = '';
+            document.getElementById('btnSaveEvalManager').classList.add('hidden');
+            chargerEcartsManager(); // Rafraîchir les écarts
+            
+        } catch (error) {
+            console.error('Erreur:', error);
+            alert('❌ Erreur : ' + error.message);
+        }
+    }
+
+    // ÉCARTS MANAGER
+    async function chargerEcartsManager() {
+        try {
+            // Récupérer les collaborateurs du manager
+            const { data: mesCollabs } = await sb.from('collaborateurs')
+                .select('id, nom, prenom, metier_id, metier:metiers(nom)')
+                .eq('manager_id', currentUserId);
+
+            if (!mesCollabs || mesCollabs.length === 0) {
+                document.getElementById('tableEcartsManager').innerHTML = 
+                    '<p class="text-gray-500 text-center py-8">Aucun collaborateur assigné</p>';
+                return;
+            }
+
+            const collabIds = mesCollabs.map(c => c.id);
+
+            // Récupérer les niveaux requis
+            const { data: niveauxAttendus } = await sb.from('niveaux_attendus')
+                .select('metier_id, competence_id, niveau_requis');
+            
+            const niveauxMap = {};
+            (niveauxAttendus || []).forEach(n => {
+                const key = `${n.metier_id}_${n.competence_id}`;
+                niveauxMap[key] = n.niveau_requis;
+            });
+
+            // Récupérer les évaluations
+            const { data: evals } = await sb.from('evaluations_competences')
+                .select(`
+                    *, 
+                    collaborateur:collaborateurs!inner(nom, prenom, metier_id, metier:metiers(nom)),
+                    competence:competences(nom, categorie)
+                `)
+                .in('collaborateur_id', collabIds);
+
+            // Ajouter niveau_requis
+            const evalsAvecRequis = (evals || []).map(e => {
+                const key = `${e.collaborateur.metier_id}_${e.competence_id}`;
+                const niveauRequis = niveauxMap[key] || 0;
+                return { ...e, niveau_requis: niveauRequis };
+            });
+
+            const ecarts = evalsAvecRequis.filter(e => e.niveau_actuel < e.niveau_requis);
+
+            // Mettre à jour les KPIs
+            document.getElementById('managerCollabs').textContent = mesCollabs.length;
+            document.getElementById('managerEcarts').textContent = ecarts.length;
+            
+            const compsUniques = [...new Set(ecarts.map(e => e.competence.nom))];
+            document.getElementById('managerComps').textContent = compsUniques.length;
+
+            const el = document.getElementById('tableEcartsManager');
+
+            if (ecarts.length === 0) {
+                el.innerHTML = '<p class="text-green-600 text-center py-8">✅ Aucun écart de compétence dans votre équipe</p>';
+                return;
+            }
+
+            // Grouper par compétence
+            const parCompetence = {};
+            ecarts.forEach(e => {
+                const comp = e.competence.nom;
+                if (!parCompetence[comp]) parCompetence[comp] = { 
+                    count: 0, 
+                    ecartTotal: 0, 
+                    salaries: [],
+                    categorie: e.competence.categorie 
+                };
+                parCompetence[comp].count++;
+                parCompetence[comp].ecartTotal += (e.niveau_requis - e.niveau_actuel);
+                parCompetence[comp].salaries.push(`${e.collaborateur.nom} ${e.collaborateur.prenom}`);
+            });
+
+            const topCompetences = Object.entries(parCompetence)
+                .sort((a, b) => b[1].count - a[1].count);
+
+            el.innerHTML = `
+                <!-- Top compétences à former -->
+                <div class="bg-orange-50 border border-orange-200 rounded-lg p-6 mb-6">
+                    <h3 class="font-bold text-lg mb-4 text-orange-800">🎯 Priorités de Formation</h3>
+                    <div class="space-y-3">
+                        ${topCompetences.map(([comp, info]) => `
+                            <div class="bg-white p-4 rounded-lg border border-orange-100">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex-1">
+                                        <div class="font-semibold text-lg">${comp}</div>
+                                        <div class="text-sm text-gray-600 mt-1">
+                                            <span class="inline-block bg-gray-100 px-2 py-1 rounded text-xs">
+                                                ${info.categorie}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-2xl font-bold text-orange-600">${info.count}</div>
+                                        <div class="text-xs text-gray-600">personne(s)</div>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-gray-700 mt-2">
+                                    <strong>Concernés :</strong> ${info.salaries.join(', ')}
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">
+                                    Écart total : ${info.ecartTotal} niveaux
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Tableau détaillé -->
+                <div class="bg-white border rounded-lg overflow-hidden">
+                    <div class="bg-gray-50 px-4 py-3 border-b">
+                        <h3 class="font-bold">📋 Détail des Écarts par Collaborateur</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50 border-b">
+                                <tr>
+                                    <th class="px-4 py-3 text-left font-semibold">Collaborateur</th>
+                                    <th class="px-4 py-3 text-left font-semibold">Compétence</th>
+                                    <th class="px-4 py-3 text-center font-semibold">Niveau Actuel</th>
+                                    <th class="px-4 py-3 text-center font-semibold">Niveau Requis</th>
+                                    <th class="px-4 py-3 text-center font-semibold">Écart</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${ecarts.map(e => `
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="px-4 py-3 font-medium">${e.collaborateur.nom} ${e.collaborateur.prenom}</td>
+                                        <td class="px-4 py-3">${e.competence.nom}</td>
+                                        <td class="px-4 py-3 text-center">
+                                            <span class="px-2 py-1 bg-orange-100 text-orange-800 rounded font-semibold">${e.niveau_actuel}/5</span>
+                                        </td>
+                                        <td class="px-4 py-3 text-center">
+                                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded font-semibold">${e.niveau_requis}/5</span>
+                                        </td>
+                                        <td class="px-4 py-3 text-center">
+                                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded font-bold">-${e.niveau_requis - e.niveau_actuel}</span>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+        } catch (error) {
+            console.error('Erreur chargement écarts:', error);
+            document.getElementById('tableEcartsManager').innerHTML = 
+                '<p class="text-red-600 text-center py-8">❌ Erreur de chargement</p>';
+        }
+    }
+
+    // RÉSULTATS
+    async function chargerResultats() {
+        const el = document.getElementById('tableEcarts');
+
+        // Charger les données de base en parallèle
+        const [
+            { data: collabs },
+            { data: postes },
+            { data: comps },
+            { data: niveauxAttendus },
+            { data: evals }
+        ] = await Promise.all([
+            sb.from('collaborateurs').select('*').eq('entreprise_id', entrepriseId),
+            sb.from('metiers').select('*').eq('entreprise_id', entrepriseId),
+            sb.from('competences').select('*').eq('entreprise_id', entrepriseId),
+            sb.from('niveaux_attendus').select('metier_id, competence_id, niveau_requis'),
+            sb.from('evaluations_competences').select('*')
+        ]);
+
+        // Maps pour accès rapide
+        const collabMap = {};
+        (collabs || []).forEach(c => { collabMap[c.id] = c; });
+
+        const posteMap = {};
+        (postes || []).forEach(p => { posteMap[p.id] = p.nom; });
+
+        const compMap = {};
+        (comps || []).forEach(c => { compMap[c.id] = { nom: c.nom, categorie: c.categorie }; });
+
+        const niveauxMap = {};
+        (niveauxAttendus || []).forEach(n => {
+            const key = `${n.metier_id}_${n.competence_id}`;
+            niveauxMap[key] = n.niveau_requis;
+        });
+
+        document.getElementById('resCollabs').textContent = (collabs || []).length;
+        document.getElementById('resPostes').textContent = (postes || []).length;
+        document.getElementById('resComps').textContent = (comps || []).length;
+
+        // Construire les évaluations enrichies (avec collaborateur, poste, compétence, niveau requis)
+        const evalsAvecRequis = (evals || []).map(e => {
+            const collab = collabMap[e.collaborateur_id];
+            if (!collab || collab.entreprise_id !== entrepriseId) return null;
+
+            const comp = compMap[e.competence_id] || { nom: 'Compétence inconnue', categorie: '' };
+            const posteNom = posteMap[collab.metier_id] || 'Sans poste';
+            const key = `${collab.metier_id}_${e.competence_id}`;
+            const niveauRequis = niveauxMap[key] || 0;
+
+            return {
+                ...e,
+                collaborateur: collab,
+                competence: comp,
+                posteNom,
+                niveau_requis: niveauRequis
+            };
+        }).filter(Boolean);
+
+        const ecarts = evalsAvecRequis.filter(e => e.niveau_actuel < e.niveau_requis);
+        document.getElementById('resEcarts').textContent = ecarts.length;
+
+        if (ecarts.length === 0) {
+            el.innerHTML = '<p class="text-green-600 text-center py-8">✅ Aucun écart de compétence détecté</p>';
+            return;
+        }
+
+        // Grouper par poste
+        const parPoste = {};
+        ecarts.forEach(e => {
+            const poste = e.posteNom;
+            if (!parPoste[poste]) parPoste[poste] = [];
+            parPoste[poste].push(e);
+        });
+
+        // Grouper par compétence
+        const parCompetence = {};
+        ecarts.forEach(e => {
+            const comp = e.competence.nom;
+            if (!parCompetence[comp]) parCompetence[comp] = { count: 0, ecartTotal: 0, salaries: [] };
+            parCompetence[comp].count++;
+            parCompetence[comp].ecartTotal += (e.niveau_requis - e.niveau_actuel);
+            parCompetence[comp].salaries.push(`${e.collaborateur.nom} ${e.collaborateur.prenom}`);
+        });
+
+        const topCompetences = Object.entries(parCompetence)
+            .sort((a, b) => b[1].count - a[1].count)
+            .slice(0, 10);
+
+        el.innerHTML = `
+            <!-- Synthèse -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Top compétences à former -->
+                <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                    <h3 class="font-bold text-lg mb-3 text-orange-800">🎯 Top Compétences à Former</h3>
+                    <div class="space-y-2">
+                        ${topCompetences.map(([comp, info]) => `
+                            <div class="bg-white p-3 rounded border border-orange-100">
+                                <div class="font-semibold">${comp}</div>
+                                <div class="text-sm text-gray-600 mt-1">
+                                    ${info.count} personne(s) concernée(s) - Écart total: ${info.ecartTotal} niveaux
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">
+                                    ${info.salaries.slice(0, 3).join(', ')}${info.salaries.length > 3 ? '...' : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Écarts par poste -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h3 class="font-bold text-lg mb-3 text-blue-800">💼 Écarts par Poste</h3>
+                    <div class="space-y-2">
+                        ${Object.entries(parPoste).map(([poste, ecartsPoste]) => `
+                            <div class="bg-white p-3 rounded border border-blue-100">
+                                <div class="font-semibold">${poste}</div>
+                                <div class="text-sm text-gray-600">
+                                    ${ecartsPoste.length} écart(s) - 
+                                    ${[...new Set(ecartsPoste.map(e => e.collaborateur.nom))].length} salarié(s)
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tableau détaillé -->
+            <div class="bg-white border rounded-lg overflow-hidden">
+                <div class="bg-gray-50 px-4 py-3 border-b">
+                    <h3 class="font-bold">📋 Détail des Écarts</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="px-4 py-3 text-left font-semibold">Salarié</th>
+                                <th class="px-4 py-3 text-left font-semibold">Poste</th>
+                                <th class="px-4 py-3 text-left font-semibold">Compétence</th>
+                                <th class="px-4 py-3 text-center font-semibold">Niveau Actuel</th>
+                                <th class="px-4 py-3 text-center font-semibold">Niveau Requis</th>
+                                <th class="px-4 py-3 text-center font-semibold">Écart</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${ecarts.map(e => `
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-3">${e.collaborateur.nom} ${e.collaborateur.prenom}</td>
+                                    <td class="px-4 py-3 text-gray-600">${e.posteNom}</td>
+                                    <td class="px-4 py-3">${e.competence.nom}</td>
+                                    <td class="px-4 py-3 text-center">
+                                        <span class="px-2 py-1 bg-orange-100 text-orange-800 rounded">${e.niveau_actuel}/5</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded">${e.niveau_requis}/5</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded font-bold">-${e.niveau_requis - e.niveau_actuel}</span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+
+    // SUPPRIMER SALARIÉ
+    async function supprimerSalarie(id, nom) {
+        if (!confirm(`⚠️ Supprimer ${nom} ?\n\nCela supprimera aussi toutes ses évaluations.`)) return;
+
+        try {
+            // Supprimer les évaluations
+            await sb.from('evaluations_competences').delete().eq('collaborateur_id', id);
+            // Supprimer le salarié
+            await sb.from('collaborateurs').delete().eq('id', id);
+            
+            alert(`✅ ${nom} supprimé`);
+            chargerSalaries();
+            chargerKPIsAccueil();
+        } catch (error) {
+            alert('❌ Erreur : ' + error.message);
+        }
+    }
+
+    // EXPORT BASE
+    async function exporterBase() {
+        if (!confirm('📤 Exporter toute la base de données ?')) return;
+
+        try {
+            const { data: postes } = await sb.from('metiers').select('*').eq('entreprise_id', entrepriseId);
+            const { data: comps } = await sb.from('competences').select('*').eq('entreprise_id', entrepriseId);
+            const { data: niveaux } = await sb.from('niveaux_attendus').select('*');
+            const { data: collabs } = await sb.from('collaborateurs').select('*').eq('entreprise_id', entrepriseId);
+            const { data: evals } = await sb.from('evaluations_competences').select('*');
+
+            const exportData = {
+                version: '1.0',
+                date: new Date().toISOString(),
+                entreprise_id: entrepriseId,
+                postes: postes || [],
+                competences: comps || [],
+                niveaux_attendus: niveaux || [],
+                collaborateurs: collabs || [],
+                evaluations: evals || []
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `GEPP_BACKUP_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+
+            alert('✅ Export réussi !');
+        } catch (error) {
+            alert('❌ Erreur export : ' + error.message);
+        }
+    }
+
+    // IMPORT BASE
+    function showImport() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (!confirm('⚠️ ATTENTION !\n\nL\'import va REMPLACER toutes les données actuelles.\n\nVoulez-vous continuer ?')) return;
+
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+
+                // Vérifier format
+                if (!data.version || !data.postes) {
+                    throw new Error('Format de fichier invalide');
+                }
+
+                // Supprimer données existantes
+                await sb.from('evaluations_competences').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                await sb.from('niveaux_attendus').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                await sb.from('collaborateurs').delete().eq('entreprise_id', entrepriseId);
+                await sb.from('competences').delete().eq('entreprise_id', entrepriseId);
+                await sb.from('metiers').delete().eq('entreprise_id', entrepriseId);
+
+                // Insérer nouvelles données
+                if (data.postes.length > 0) {
+                    const postesWithEntreprise = data.postes.map(p => ({ ...p, entreprise_id: entrepriseId }));
+                    await sb.from('metiers').insert(postesWithEntreprise);
+                }
+
+                if (data.competences.length > 0) {
+                    const compsWithEntreprise = data.competences.map(c => ({ ...c, entreprise_id: entrepriseId }));
+                    await sb.from('competences').insert(compsWithEntreprise);
+                }
+
+                if (data.niveaux_attendus.length > 0) {
+                    await sb.from('niveaux_attendus').insert(data.niveaux_attendus);
+                }
+
+                if (data.collaborateurs.length > 0) {
+                    const collabsWithEntreprise = data.collaborateurs.map(c => ({ ...c, entreprise_id: entrepriseId }));
+                    await sb.from('collaborateurs').insert(collabsWithEntreprise);
+                }
+
+                if (data.evaluations.length > 0) {
+                    await sb.from('evaluations_competences').insert(data.evaluations);
+                }
+
+                alert(`✅ Import réussi !\n\n${data.postes.length} postes\n${data.competences.length} compétences\n${data.collaborateurs.length} collaborateurs\n${data.evaluations.length} évaluations`);
+                
+                showHome();
+            } catch (error) {
+                alert('❌ Erreur import : ' + error.message);
+            }
+        };
+        input.click();
+    }
+    </script>
+</body>
+</html>
